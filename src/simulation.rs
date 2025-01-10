@@ -3,8 +3,10 @@ use rand::Rng;
 
 pub const WINDOW_WIDTH: f32 = 800.0;
 pub const WINDOW_HEIGHT: f32 = 600.0;
-pub const COULOMB_CONSTANT: f32 = 1000.0;
-const DAMPING: f32 = 0.99;
+pub const COULOMB_CONSTANT: f32 = 1000000.0;
+const DAMPING: f32 = 0.00;
+pub const PARTICLE_COUNT: usize = 30;
+pub const VELOCITY_RANGE: f32 = 100.0;
 
 pub struct Particle {
     pub position: Vector2<f32>,
@@ -14,10 +16,10 @@ pub struct Particle {
 }
 
 impl Particle {
-    pub fn new(x: f32, y: f32, mass: f32, charge: f32) -> Self {
+    pub fn new(x: f32, y: f32, vx: f32, vy: f32, mass: f32, charge: f32) -> Self {
         Particle {
             position: Vector2::new(x, y),
-            velocity: Vector2::new(0.0, 0.0),
+            velocity: Vector2::new(vx, vy),
             mass,
             charge,
         }
@@ -26,7 +28,7 @@ impl Particle {
     pub fn update(&mut self, dt: f32, force: Vector2<f32>) {
         // F = ma, so a = F/m
         self.velocity += force * (dt / self.mass);
-        self.velocity *= DAMPING;
+        self.velocity *= 1.0 - DAMPING;
         self.position += self.velocity * dt;
 
         // Calculate radius based on mass for collision detection
@@ -61,13 +63,15 @@ impl Simulation {
         let mut particles = Vec::new();
 
         // Create some random particles
-        for _ in 0..10 {
+        for _ in 0..PARTICLE_COUNT {
             let mass: f32 = rng.gen_range(0.5..4.0);
             let radius = 3.0 * mass.sqrt();
             let x = rng.gen_range(radius..WINDOW_WIDTH - radius);
             let y = rng.gen_range(radius..WINDOW_HEIGHT - radius);
+            let vx = rng.gen_range(-VELOCITY_RANGE..VELOCITY_RANGE);
+            let vy = rng.gen_range(-VELOCITY_RANGE..VELOCITY_RANGE);
             let charge = rng.gen_range(-2.0..2.0);
-            particles.push(Particle::new(x, y, mass, charge));
+            particles.push(Particle::new(x, y, vx, vy, mass, charge));
         }
 
         Simulation { particles }
