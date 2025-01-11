@@ -25,31 +25,42 @@ impl Particle {
         }
     }
 
+    fn handle_wall_collisions(
+        position: &mut Vector2<f32>,
+        velocity: &mut Vector2<f32>,
+        mass: f32,
+    ) {
+        let radius = 3.0 * mass.sqrt();
+
+        // Bounce off walls
+        if position.x < radius {
+            position.x = radius;
+            velocity.x = velocity.x.abs();
+        } else if position.x > WINDOW_WIDTH - radius {
+            position.x = WINDOW_WIDTH - radius;
+            velocity.x = -velocity.x.abs();
+        }
+
+        if position.y < radius {
+            position.y = radius;
+            velocity.y = velocity.y.abs();
+        } else if position.y > WINDOW_HEIGHT - radius {
+            position.y = WINDOW_HEIGHT - radius;
+            velocity.y = -velocity.y.abs();
+        }
+    }
+
     pub fn update(&mut self, dt: f32, force: Vector2<f32>) {
         // F = ma, so a = F/m
         self.velocity += force * (dt / self.mass);
         self.velocity *= 1.0 - DAMPING;
         self.position += self.velocity * dt;
 
-        // Calculate radius based on mass for collision detection
-        let radius = 3.0 * self.mass.sqrt();
-
-        // Bounce off walls
-        if self.position.x < radius {
-            self.position.x = radius;
-            self.velocity.x = self.velocity.x.abs();
-        } else if self.position.x > WINDOW_WIDTH - radius {
-            self.position.x = WINDOW_WIDTH - radius;
-            self.velocity.x = -self.velocity.x.abs();
-        }
-
-        if self.position.y < radius {
-            self.position.y = radius;
-            self.velocity.y = self.velocity.y.abs();
-        } else if self.position.y > WINDOW_HEIGHT - radius {
-            self.position.y = WINDOW_HEIGHT - radius;
-            self.velocity.y = -self.velocity.y.abs();
-        }
+        Self::handle_wall_collisions(
+            &mut self.position,
+            &mut self.velocity,
+            self.mass,
+        );
     }
 }
 
@@ -109,4 +120,4 @@ impl Simulation {
         
         forces
     }
-} 
+}  
