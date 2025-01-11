@@ -39,8 +39,8 @@
           coulombConstant: 1000000.0,
           damping: 0.0,
           particleCount: 30,
-          velocityRange: 100.0,
-          decayFactor: 0.95,
+          velocityRange: 2.0,
+          tailLength: 10,
         };
 
         gui.add(params, "coulombConstant", 0, 2000000).onChange((value) => {
@@ -49,7 +49,7 @@
         gui.add(params, "damping", 0, 0.1).onChange((value) => {
           simulation.set_damping(value);
         });
-        gui.add(params, "velocityRange", 0, 200).onChange((value) => {
+        gui.add(params, "velocityRange", 0, 40).onChange((value) => {
           simulation.set_velocity_range(value);
         });
         gui
@@ -58,13 +58,18 @@
           .onChange((value) => {
             simulation.reset_with_particle_count(value);
           });
-        gui.add(params, "decayFactor", 0.5, 1.0).onChange((value) => {
-          simulation.set_decay_factor(value);
-        });
+        gui
+          .add(params, "tailLength", 1, 50)
+          .step(1)
+          .onChange((value) => {
+            simulation.set_tail_length(value);
+          });
 
         function animate() {
           simulation.update(1.0 / 60.0);
-          simulation.draw(params.decayFactor);
+          // Convert tail length to decay factor: longer tail = higher decay factor
+          const decayFactor = 1.0 - 1.0 / params.tailLength;
+          simulation.draw(decayFactor);
           requestAnimationFrame(animate);
         }
 

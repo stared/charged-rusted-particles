@@ -6,7 +6,7 @@ pub const WINDOW_HEIGHT: f32 = 600.0;
 pub static mut COULOMB_CONSTANT: f32 = 1000000.0;
 pub static mut DAMPING: f32 = 0.00;
 pub static mut PARTICLE_COUNT: usize = 30;
-pub static mut VELOCITY_RANGE: f32 = 100.0;
+pub static mut VELOCITY_RANGE: f32 = 2.0;
 
 pub struct Particle {
     pub position: Vector2<f32>,

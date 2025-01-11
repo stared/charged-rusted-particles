@@ -35,7 +35,7 @@ impl SimulationWrapper {
 
     pub fn draw(&self, decay_factor: f32) {
         // Apply trail effect by drawing a transparent black rectangle
-        // The opacity is inverse of decay_factor to create a linear fade
+        // The opacity is inverse of decay_factor (which is derived from tail length)
         self.context.set_global_alpha(1.0 - decay_factor as f64);
         self.context.set_fill_style_str("#000000");
         self.context.fill_rect(0.0, 0.0, WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
@@ -99,7 +99,4 @@ impl SimulationWrapper {
         self.context.fill_rect(0.0, 0.0, WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
     }
 
-    pub fn set_decay_factor(&mut self, _value: f32) {
-        // No need to store the decay factor as it's passed directly to draw
-    }
 } 
