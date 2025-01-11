@@ -99,4 +99,9 @@ impl SimulationWrapper {
         self.context.fill_rect(0.0, 0.0, WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
     }
 
+    pub fn set_integration_method(&mut self, use_verlet: bool) {
+        unsafe {
+            USE_VERLET = use_verlet;
+        }
+    }
 } 

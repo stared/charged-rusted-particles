@@ -41,6 +41,7 @@
           particleCount: 30,
           velocityRange: 2.0,
           tailLength: 10,
+          integrationMethod: "Verlet",
         };
 
         gui.add(params, "coulombConstant", 0, 2000000).onChange((value) => {
@@ -63,6 +64,11 @@
           .step(1)
           .onChange((value) => {
             simulation.set_tail_length(value);
+          });
+        gui
+          .add(params, "integrationMethod", ["Euler", "Verlet"])
+          .onChange((value) => {
+            simulation.set_integration_method(value === "Verlet");
           });
 
         function animate() {
