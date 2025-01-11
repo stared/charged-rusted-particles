@@ -5,12 +5,19 @@
     <title>Charged Particles Simulation</title>
     <style>
       canvas {
-        border: 1px solid black;
+        border: 1px solid #333;
         margin: 0 auto;
         display: block;
       }
       body {
-        background-color: #f0f0f0;
+        background-color: #000;
+      }
+      /* Dark theme for DAT.GUI */
+      .dg.main {
+        color: #eee;
+      }
+      .dg.main .close-button {
+        color: #eee;
       }
     </style>
   </head>
@@ -33,6 +40,7 @@
           damping: 0.0,
           particleCount: 30,
           velocityRange: 100.0,
+          decayFactor: 0.95,
         };
 
         gui.add(params, "coulombConstant", 0, 2000000).onChange((value) => {
@@ -50,10 +58,13 @@
           .onChange((value) => {
             simulation.reset_with_particle_count(value);
           });
+        gui.add(params, "decayFactor", 0.5, 1.0).onChange((value) => {
+          simulation.set_decay_factor(value);
+        });
 
         function animate() {
           simulation.update(1.0 / 60.0);
-          simulation.draw();
+          simulation.draw(params.decayFactor);
           requestAnimationFrame(animate);
         }
 
