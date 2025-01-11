@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Charged Particles Simulation</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+        margin: 0 auto;
+        display: block;
+      }
+      body {
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    <script type="module">
+      import init, { SimulationWrapper } from "./pkg/charged_particles.js";
+
+      async function run() {
+        await init();
+
+        const canvas = document.getElementById("canvas");
+        const simulation = new SimulationWrapper(canvas);
+
+        // Setup DAT.GUI
+        const gui = new dat.GUI();
+        const params = {
+          coulombConstant: 1000000.0,
+          damping: 0.0,
+          particleCount: 30,
+          velocityRange: 100.0,
+        };
+
+        gui.add(params, "coulombConstant", 0, 2000000).onChange((value) => {
+          simulation.set_coulomb_constant(value);
+        });
+        gui.add(params, "damping", 0, 0.1).onChange((value) => {
+          simulation.set_damping(value);
+        });
+        gui.add(params, "velocityRange", 0, 200).onChange((value) => {
+          simulation.set_velocity_range(value);
+        });
+        gui
+          .add(params, "particleCount", 1, 100)
+          .step(1)
+          .onChange((value) => {
+            simulation.reset_with_particle_count(value);
+          });
+
+        function animate() {
+          simulation.update(1.0 / 60.0);
+          simulation.draw();
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      }
+
+      run();
+    </script>
+  </body>
+</html>
