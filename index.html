@@ -11,6 +11,7 @@
       }
       body {
         background-color: #000;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
       /* Dark theme for DAT.GUI */
       .dg.main {
@@ -19,10 +20,54 @@
       .dg.main .close-button {
         color: #eee;
       }
+      #energy-display {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 245px;
+        background: #1a1a1a;
+        color: #eee;
+        font-family: "Lucida Grande", sans-serif;
+        font-size: 11px;
+        z-index: 1000;
+      }
+      #energy-display h3 {
+        background: #000;
+        padding: 3px;
+        margin: 0;
+        font-weight: bold;
+        text-shadow: 0 1px 0 #000;
+        border-bottom: 1px solid #2c2c2c;
+      }
+      .energy-value {
+        padding: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #2c2c2c;
+      }
+      .energy-value span {
+        color: #2fa1d6;
+      }
     </style>
   </head>
   <body>
     <canvas id="canvas" width="800" height="600"></canvas>
+    <div id="energy-display">
+      <h3>ENERGIES</h3>
+      <div class="energy-value">
+        <div>Kinetic</div>
+        <span id="kinetic">0.000</span>
+      </div>
+      <div class="energy-value">
+        <div>Potential</div>
+        <span id="potential">0.000</span>
+      </div>
+      <div class="energy-value">
+        <div>Total</div>
+        <span id="total">0.000</span>
+      </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
     <script type="module">
       import init, { SimulationWrapper } from "./pkg/charged_particles.js";
@@ -71,11 +116,32 @@
             simulation.set_integration_method(value === "Verlet");
           });
 
+        // Position energy display below DAT.GUI
+        const energyDisplay = document.getElementById("energy-display");
+        // Wait for DAT.GUI to be rendered
+        setTimeout(() => {
+          const datGui = document.querySelector(".dg.main");
+          if (datGui) {
+            const datGuiRect = datGui.getBoundingClientRect();
+            energyDisplay.style.top = datGuiRect.bottom + 10 + "px";
+            energyDisplay.style.right =
+              datGuiRect.right - datGuiRect.left + "px";
+          }
+        }, 100);
+
         function animate() {
           simulation.update(1.0 / 60.0);
-          // Convert tail length to decay factor: longer tail = higher decay factor
           const decayFactor = 1.0 - 1.0 / params.tailLength;
           simulation.draw(decayFactor);
+
+          // Update energy display
+          const energies = simulation.get_energies();
+          document.getElementById("kinetic").textContent =
+            energies[0].toFixed(3);
+          document.getElementById("potential").textContent =
+            energies[1].toFixed(3);
+          document.getElementById("total").textContent = energies[2].toFixed(3);
+
           requestAnimationFrame(animate);
         }
 

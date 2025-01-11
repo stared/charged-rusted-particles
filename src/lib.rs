@@ -70,6 +70,15 @@ impl SimulationWrapper {
         }
     }
 
+    pub fn get_energies(&self) -> js_sys::Array {
+        let (kinetic, potential, total) = self.simulation.get_normalized_energies();
+        let array = js_sys::Array::new();
+        array.push(&JsValue::from_f64(kinetic as f64));
+        array.push(&JsValue::from_f64(potential as f64));
+        array.push(&JsValue::from_f64(total as f64));
+        array
+    }
+
     pub fn set_coulomb_constant(&mut self, value: f32) {
         unsafe {
             COULOMB_CONSTANT = value;

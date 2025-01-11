@@ -1,5 +1,6 @@
 use nalgebra::Vector2;
 use rand::Rng;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 pub const WINDOW_WIDTH: f32 = 800.0;
 pub const WINDOW_HEIGHT: f32 = 600.0;
@@ -8,6 +9,9 @@ pub static mut DAMPING: f32 = 0.00;
 pub static mut PARTICLE_COUNT: usize = 30;
 pub static mut VELOCITY_RANGE: f32 = 2.0;
 pub static mut USE_VERLET: bool = true;
+
+// Store initial energy as bits of f32 in AtomicU32
+static INITIAL_ENERGY: AtomicU32 = AtomicU32::new(0);
 
 pub struct Particle {
     pub position: Vector2<f32>,
@@ -96,6 +100,7 @@ impl Simulation {
                     // First half of verlet step
                     let half_dt = 0.5 * dt;
                     particle.velocity += *force * (half_dt / particle.mass);
+                    particle.velocity *= 1.0 - DAMPING;
                     particle.position += particle.velocity * dt;
                     Particle::handle_wall_collisions(&mut particle.position, &mut particle.velocity, particle.mass);
                 }
@@ -109,6 +114,7 @@ impl Simulation {
                     let half_dt = 0.5 * dt;
                     particle.velocity += *new_force * (half_dt / particle.mass);
                     particle.velocity *= 1.0 - DAMPING;
+                    Particle::handle_wall_collisions(&mut particle.position, &mut particle.velocity, particle.mass);
                 }
             } else {
                 let forces = self.calculate_forces();
@@ -147,5 +153,54 @@ impl Simulation {
         }
 
         forces
+    }
+
+    pub fn calculate_kinetic_energy(&self) -> f32 {
+        self.particles.iter().map(|p| {
+            0.5 * p.mass * p.velocity.magnitude_squared()
+        }).sum()
+    }
+
+    pub fn calculate_potential_energy(&self) -> f32 {
+        let mut total = 0.0;
+        
+        for i in 0..self.particles.len() {
+            for j in (i + 1)..self.particles.len() {
+                let diff = self.particles[j].position - self.particles[i].position;
+                let distance = diff.magnitude();
+                let min_distance = 3.0 * (self.particles[i].mass.sqrt() + self.particles[j].mass.sqrt());
+
+                if distance < min_distance {
+                    continue; // Skip to avoid extreme energies
+                }
+
+                unsafe {
+                    total += COULOMB_CONSTANT 
+                        * self.particles[i].charge 
+                        * self.particles[j].charge 
+                        / distance;
+                }
+            }
+        }
+        
+        total
+    }
+
+    pub fn get_normalized_energies(&self) -> (f32, f32, f32) {
+        let kinetic = self.calculate_kinetic_energy();
+        let potential = self.calculate_potential_energy();
+        let total = kinetic + potential;
+        
+        // Get initial energy scale to normalize
+        let initial_bits = INITIAL_ENERGY.load(Ordering::Relaxed);
+        if initial_bits == 0 {
+            // Store initial energy as bits
+            let bits = total.to_bits();
+            INITIAL_ENERGY.store(bits, Ordering::Relaxed);
+            (kinetic / total, potential / total, 1.0) // Normalize to initial values
+        } else {
+            let scale = f32::from_bits(initial_bits);
+            (kinetic / scale, potential / scale, total / scale)
+        }
     }
 }  
